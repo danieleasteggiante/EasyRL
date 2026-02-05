@@ -24,7 +24,7 @@ class QTable:
         column_names = self.__populate_column_names()
         row_names = self.__populate_row_names()
         table_str = "       " + "  ".join(column_names) + "   \n"
-        for i, row in enumerate(self.Q_table):
+        for i, row in enumerate(self.matrix):
             table_str += f"{row_names[i]} ¦ " + " ¦ ".join(f" {value} " for value in row) + " ¦\n"
         return table_str
 
@@ -40,10 +40,10 @@ class QTable:
         return rows
 
     def update(self, state: tuple, action: int, value: float):
-        self.Q_table[self.__index_from_state(state)][action] = value
+        self.matrix[self.__index_from_state(state)][action] = value
 
     def __value(self, state: tuple, action: int):
-        return self.Q_table[self.__index_from_state(state)][action]
+        return self.matrix[self.__index_from_state(state)][action]
 
     def choose_action(self, state: tuple, epsilon: float):
         actions_values = [self.__value(state, action) for action in range(len(self.actions))]
