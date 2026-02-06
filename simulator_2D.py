@@ -17,7 +17,7 @@ class Simulator2D:
         self.actions = Actions2D(actions)
         self.Q_table : QTable = QTable(self.environment.matrix_size, self.actions.actions)
         self.epsilon = epsilon
-        self.out_of_bounds_penalty = -10
+        self.out_of_bounds_penalty = -1
 
     def train(self, episodes: int):
         state = self.environment.initial_position
@@ -31,7 +31,6 @@ class Simulator2D:
             if done:
                 print("Reached the reward position!")
                 break
-
 
     def __choose_action(self, state):
         probability = random.random()
@@ -61,14 +60,15 @@ class Simulator2D:
             # gli è stato assegnato il vecchio stato, quindi assegna la penalità
             return self.out_of_bounds_penalty
         if new_state == self.environment.reward_position:
-            row, col = self.environment.reward_position
-            return self.Q_table[row][col]
-        if self.__contains_negative_number(new_state):
+            return self.environment.value(self.environment.reward_position)
+        if self.__is_out_of_bound(new_state):
             return self.out_of_bounds_penalty
         return 0
 
-    def __contains_negative_number(self, state):
-        return state[0] < 0 or state[1] < 0
+    def __is_out_of_bound(self, state):
+        row, col = state
+        m_row, m_col = self.environment.matrix_size
+        return row < 0 or row >= m_row or col < 0 or col >= m_col
 
     def __check_if_done(self, state):
         return state == self.environment.reward_position
@@ -76,7 +76,7 @@ class Simulator2D:
     def __get_new_state(self, state, movement):
         new_row = state[0] + movement[0]
         new_col = state[1] + movement[1]
-        if self.__contains_negative_number((new_row, new_col)):
-            # se uno degli indici è negativo significa che è uscito dai confini, quindi ritorna lo stato vecchio
+        if self.__is_out_of_bound((new_row, new_col)):
+            # se è out of bounds ritorna lo stato vecchio
             return state
         return new_row, new_col

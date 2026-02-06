@@ -10,9 +10,16 @@ class Environment2D:
 
     def __create_environment(self):
         row, col = self.matrix_size
-        return [[0 for _ in range(col)] for _ in range(row)]
+        env = [[0 for _ in range(col)] for _ in range(row)]
+        r_row, r_col = self.reward_position
+        env[r_row][r_col] = 1
+        return env
 
     def __is_valid_position(self, reward_position):
         r_row, r_col = reward_position
         m_row, m_col = self.matrix_size
         return r_col < m_col and r_row < m_row
+
+    def value(self, state: tuple):
+        row, col = state
+        return self.env[row][col]
