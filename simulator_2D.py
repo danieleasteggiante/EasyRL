@@ -11,10 +11,13 @@ class Simulator2D:
                  environment : tuple,
                  actions : List[str],
                  reward_position: tuple,
-                 initial_position : tuple = (0,0)):
+                 initial_position : tuple = (0,0),
+                 epsilon : float = 0.5):
         self.environment = Environment2D(environment, reward_position, initial_position)
         self.actions = Actions2D(actions)
         self.Q_table : QTable = QTable(self.environment.matrix_size, self.actions.actions)
+        self.epsilon = epsilon
+        self.out_of_bounds_penalty = -10
 
     def train(self, episodes: int):
         state = self.environment.initial_position
@@ -31,20 +34,49 @@ class Simulator2D:
 
 
     def __choose_action(self, state):
-        q_table_value = self.Q_table.value(state)
-        action =  self.__map_action_to_int(random.choice(self.actions.actions))
+        probability = random.random()
+        if probability < self.epsilon:
+            return random.choice(self.actions.actions)
+        return self.Q_table.best_action(state)
 
-    def __map_action_to_int(self, action):
+    def __map_to_movement(self, action):
         action_mapping = {
-            'up': (0,-1),
-            'down': (0,1),
-            'left': (-1,0),
-            'right': (1,0)
+            'up': (-1,0),
+            'down': (1,0),
+            'left': (0,-1),
+            'right': (0,1)
         }
         return action_mapping.get(action, -1)
 
     def __step(self, state, action):
-        new_state = state[0] + action[0], state[1] + action[1] # move to new state
-        reward = self.environment[new_state[0]][new_state[1]] # get reward for new state
-        done = new_state == self.environment.reward_position # check if episode is done
+        movement = self.__map_to_movement(action)
+        new_state = self.__get_new_state(state, movement)
+        reward = self.__get_reward(state, new_state)
+        done = self.__check_if_done(new_state)
         return new_state, reward, done
+
+    def __get_reward(self, state, new_state):
+        if new_state == state:
+            # controlla se il nuovo stato == stato significa che è uscito dai confini e
+            # gli è stato assegnato il vecchio stato, quindi assegna la penalità
+            return self.out_of_bounds_penalty
+        if new_state == self.environment.reward_position:
+            row, col = self.environment.reward_position
+            return self.Q_table[row][col]
+        if self.__contains_negative_number(new_state):
+            return self.out_of_bounds_penalty
+        return 0
+
+    def __contains_negative_number(self, state):
+        return state[0] < 0 or state[1] < 0
+
+    def __check_if_done(self, state):
+        return state == self.environment.reward_position
+
+    def __get_new_state(self, state, movement):
+        new_row = state[0] + movement[0]
+        new_col = state[1] + movement[1]
+        if self.__contains_negative_number((new_row, new_col)):
+            # se uno degli indici è negativo significa che è uscito dai confini, quindi ritorna lo stato vecchio
+            return state
+        return new_row, new_col

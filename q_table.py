@@ -1,6 +1,5 @@
 import random
 
-
 class QTable:
     def __init__(self, size : tuple, actions: list):
         self.size = size
@@ -12,15 +11,6 @@ class QTable:
         return [[0 for _ in range(len(self.actions))] for _ in range(row * col)]
 
     def render(self):
-        """
-            ¦ left ¦ right ¦ up ¦ down ¦
-        0,0 ¦ 0    ¦ 0     ¦ 0 ¦ 0   ¦
-        0,1 ¦ 0    ¦ 0     ¦ 0 ¦ 0   ¦
-        0,2 ¦ 0    ¦ 0     ¦ 0 ¦ 0   ¦
-        1,0 ¦ 0    ¦ 0     ¦ 0 ¦ 0   ¦
-        1,1 ¦ 0    ¦ 0     ¦ 0 ¦ 0   ¦
-        [...]
-        """
         column_names = self.__populate_column_names()
         row_names = self.__populate_row_names()
         table_str = "       " + "  ".join(column_names) + "   \n"
@@ -40,18 +30,18 @@ class QTable:
         return rows
 
     def update(self, state: tuple, action: int, value: float):
-        self.matrix[self.__index_from_state(state)][action] = value
+        action_index = self.actions.index(action)
+        self.matrix[self.__index_from_state(state)][action_index] = value
 
     def __value(self, state: tuple, action: int):
         return self.matrix[self.__index_from_state(state)][action]
 
-    def choose_action(self, state: tuple, epsilon: float):
-        actions_values = [self.__value(state, action) for action in range(len(self.actions))]
-        best_choice = max(actions_values)
-        probability = random.random()
-        if probability < epsilon:
-            return random.choice(range(len(self.actions)))
-        return actions_values.index(best_choice)
+    def best_action(self, state: tuple):
+        state_row = self.matrix[self.__index_from_state(state)]
+        if all(value == 0 for value in state_row):
+            return random.choice(self.actions)
+        best_action = max(state_row)
+        return self.actions[state_row.index(best_action)]
 
     def __index_from_state(self, state: tuple):
         row, col = state
