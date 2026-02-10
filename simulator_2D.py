@@ -22,16 +22,19 @@ class Simulator2D:
     def train(self, episodes: int, epchos: int = 100):
         for epoch in range(epchos):
             state = self.environment.initial_position
-            for episode in range(episodes):
-                print(f"Training episode {episode + 1}/{episodes}")
-                action = self.__choose_action(state)
-                print(f"Chosen action: {action}")
-                new_state, reward, done = self.__step(state, action)
-                self.Q_table.update(state, action, reward)
-                state = new_state
-                if done:
-                    print("Reached the reward position!")
-                    break
+            self.episode(episodes, state)
+
+    def episode(self, episodes, state):
+        for episode in range(episodes):
+            print(f"Training episode {episode + 1}/{episodes}")
+            action = self.__choose_action(state)
+            print(f"Chosen action: {action}")
+            new_state, reward, done = self.__step(state, action)
+            self.Q_table.update(state, action, reward)
+            state = new_state
+            if done:
+                print("Reached the reward position!")
+                break
 
     def __choose_action(self, state):
         probability = random.random()
